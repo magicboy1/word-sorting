@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --color-primary: #56A57D;    /* Mint green */
+    --color-secondary: #E17A63;  /* Coral */
+    --color-accent: #1F2937;     /* Navy */
+    --color-highlight: #526B96;  /* Blue */
+    --color-background: #E5EDE9; /* Light mint */
+    --color-dark: #4A2B2B;      /* Dark brown */
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
+    direction: rtl;
+  }
+
+  /* Ensure all text elements use Noto Sans Arabic */
+  html, body, *, *::before, *::after {
+    font-family: 'Noto Sans Arabic', system-ui, -apple-system, sans-serif !important;
+  }
+}
+
+.game-title {
+  color: var(--color-primary);
+  text-shadow: 2px 2px 0 var(--color-secondary),
+               4px 4px 20px rgba(86, 165, 125, 0.3);
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-family: 'Noto Sans Arabic', sans-serif !important;
+}
+
+.word-card {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-highlight));
+  border: 3px solid white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  font-family: 'Noto Sans Arabic', sans-serif !important;
+}
+
+/* Enhanced cloud animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(2deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 4s ease-in-out infinite;
+}
