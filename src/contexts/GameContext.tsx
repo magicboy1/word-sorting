@@ -1,66 +1,42 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-
-export interface Word {
-  id: string;
-  text: string;
-  category: 'internet' | 'nature' | 'food' | 'transport';
-  difficulty: 1 | 2 | 3;
-}
+import { safetyQuestions, SafetyQuestion } from '../data/safetyQuestions';
 
 export interface GameState {
   screen: 'start' | 'game' | 'complete';
   level: number;
   score: number;
-  lives: number;
-  streak: number;
-  timeLeft: number;
-  selectedCategory: 'internet' | 'nature' | 'food' | 'transport';
-  currentWords: Word[];
-  correctWords: string[];
-  gameMode: 'classic' | 'timed' | 'endless';
-  powerUps: {
-    freeze: number;
-    hint: number;
-    doublePoints: number;
-  };
-  isGameActive: boolean;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  questions: SafetyQuestion[];
+  selectedAnswer: string | null;
+  showFeedback: boolean;
+  isCorrect: boolean | null;
   feedback: {
-    type: 'success' | 'error' | 'hint' | null;
+    type: 'success' | 'error' | null;
     message: string;
     isVisible: boolean;
   };
 }
 
 type GameAction =
-  | { type: 'START_GAME'; payload: { mode: 'classic' | 'timed' | 'endless' } }
-  | { type: 'SELECT_CATEGORY'; payload: 'internet' | 'nature' | 'food' | 'transport' }
-  | { type: 'CORRECT_WORD'; payload: string }
-  | { type: 'WRONG_WORD' }
-  | { type: 'USE_POWERUP'; payload: 'freeze' | 'hint' | 'doublePoints' }
-  | { type: 'NEXT_LEVEL' }
-  | { type: 'GAME_OVER' }
+  | { type: 'START_GAME' }
+  | { type: 'SELECT_ANSWER'; payload: string }
+  | { type: 'SUBMIT_ANSWER' }
+  | { type: 'NEXT_QUESTION' }
   | { type: 'RESET_GAME' }
-  | { type: 'TICK_TIMER' }
-  | { type: 'SHOW_FEEDBACK'; payload: { type: 'success' | 'error' | 'hint'; message: string } }
+  | { type: 'SHOW_FEEDBACK'; payload: { type: 'success' | 'error'; message: string } }
   | { type: 'HIDE_FEEDBACK' };
 
 const initialState: GameState = {
   screen: 'start',
   level: 1,
   score: 0,
-  lives: 3,
-  streak: 0,
-  timeLeft: 60,
-  selectedCategory: 'internet',
-  currentWords: [],
-  correctWords: [],
-  gameMode: 'classic',
-  powerUps: {
-    freeze: 2,
-    hint: 3,
-    doublePoints: 1,
-  },
-  isGameActive: false,
+  currentQuestionIndex: 0,
+  totalQuestions: safetyQuestions.length,
+  questions: safetyQuestions,
+  selectedAnswer: null,
+  showFeedback: false,
+  isCorrect: null,
   feedback: {
     type: null,
     message: '',
@@ -68,91 +44,63 @@ const initialState: GameState = {
   },
 };
 
-const WORDS_DATABASE: Record<string, Word[]> = {
-  internet: [
-    { id: '1', text: 'الإنترنت', category: 'internet', difficulty: 1 },
-    { id: '2', text: 'موقع إلكتروني', category: 'internet', difficulty: 1 },
-    { id: '3', text: 'بريد إلكتروني', category: 'internet', difficulty: 1 },
-    { id: '4', text: 'شبكة اجتماعية', category: 'internet', difficulty: 2 },
-    { id: '5', text: 'محرك بحث', category: 'internet', difficulty: 2 },
-    { id: '6', text: 'الحوسبة السحابية', category: 'internet', difficulty: 3 },
-  ],
-  nature: [
-    { id: '7', text: 'شجرة', category: 'nature', difficulty: 1 },
-    { id: '8', text: 'زهرة', category: 'nature', difficulty: 1 },
-    { id: '9', text: 'جبل', category: 'nature', difficulty: 1 },
-    { id: '10', text: 'محيط', category: 'nature', difficulty: 2 },
-    { id: '11', text: 'غابة مطيرة', category: 'nature', difficulty: 2 },
-    { id: '12', text: 'النظام البيئي', category: 'nature', difficulty: 3 },
-  ],
-  food: [
-    { id: '13', text: 'تفاح', category: 'food', difficulty: 1 },
-    { id: '14', text: 'خبز', category: 'food', difficulty: 1 },
-    { id: '15', text: 'لحم', category: 'food', difficulty: 1 },
-    { id: '16', text: 'مأكولات بحرية', category: 'food', difficulty: 2 },
-    { id: '17', text: 'خضروات عضوية', category: 'food', difficulty: 2 },
-    { id: '18', text: 'المكملات الغذائية', category: 'food', difficulty: 3 },
-  ],
-  transport: [
-    { id: '19', text: 'سيارة', category: 'transport', difficulty: 1 },
-    { id: '20', text: 'طائرة', category: 'transport', difficulty: 1 },
-    { id: '21', text: 'قطار', category: 'transport', difficulty: 1 },
-    { id: '22', text: 'دراجة هوائية', category: 'transport', difficulty: 2 },
-    { id: '23', text: 'مركبة كهربائية', category: 'transport', difficulty: 2 },
-    { id: '24', text: 'النقل المستدام', category: 'transport', difficulty: 3 },
-  ],
-};
-
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
     case 'START_GAME':
-      const categoryWords = WORDS_DATABASE[state.selectedCategory] || [];
-      const shuffledWords = [...categoryWords, ...getRandomWordsFromOtherCategories(state.selectedCategory, 4)]
-        .sort(() => Math.random() - 0.5);
-      
       return {
         ...state,
         screen: 'game',
-        gameMode: action.payload.mode,
-        currentWords: shuffledWords,
-        isGameActive: true,
-        timeLeft: action.payload.mode === 'timed' ? 60 : 0,
+        currentQuestionIndex: 0,
+        score: 0,
+        selectedAnswer: null,
+        showFeedback: false,
+        isCorrect: null,
       };
 
-    case 'SELECT_CATEGORY':
+    case 'SELECT_ANSWER':
       return {
         ...state,
-        selectedCategory: action.payload,
+        selectedAnswer: action.payload,
       };
 
-    case 'CORRECT_WORD':
-      const basePoints = 10;
-      const difficultyMultiplier = state.currentWords.find(w => w.text === action.payload)?.difficulty || 1;
-      const streakBonus = Math.floor(state.streak / 3) * 5;
-      const points = basePoints * difficultyMultiplier + streakBonus;
+    case 'SUBMIT_ANSWER':
+      if (!state.selectedAnswer) return state;
+
+      const currentQuestion = state.questions[state.currentQuestionIndex];
+      const selectedChoice = currentQuestion.choices.find(
+        choice => choice.id === state.selectedAnswer
+      );
+      const isCorrect = selectedChoice?.isCorrect || false;
 
       return {
         ...state,
-        score: state.score + points,
-        streak: state.streak + 1,
-        correctWords: [...state.correctWords, action.payload],
+        isCorrect,
+        showFeedback: true,
+        score: isCorrect ? state.score + 10 : state.score,
         feedback: {
-          type: 'success',
-          message: `+${points} نقطة!`,
+          type: isCorrect ? 'success' : 'error',
+          message: isCorrect ? 'إجابة صحيحة!' : 'حاول مرة أخرى!',
           isVisible: true,
         },
       };
 
-    case 'WRONG_WORD':
+    case 'NEXT_QUESTION':
+      const nextIndex = state.currentQuestionIndex + 1;
+
+      if (nextIndex >= state.totalQuestions) {
+        return {
+          ...state,
+          screen: 'complete',
+        };
+      }
+
       return {
         ...state,
-        lives: state.lives - 1,
-        streak: 0,
-        feedback: {
-          type: 'error',
-          message: 'حاول مرة أخرى!',
-          isVisible: true,
-        },
+        currentQuestionIndex: nextIndex,
+        selectedAnswer: null,
+        showFeedback: false,
+        isCorrect: null,
+        level: Math.floor(nextIndex / 2) + 1,
       };
 
     case 'SHOW_FEEDBACK':
@@ -174,43 +122,12 @@ function gameReducer(state: GameState, action: GameAction): GameState {
         },
       };
 
-    case 'TICK_TIMER':
-      const newTimeLeft = state.timeLeft - 1;
-      if (newTimeLeft <= 0 && state.gameMode === 'timed') {
-        return {
-          ...state,
-          timeLeft: 0,
-          screen: 'complete',
-          isGameActive: false,
-        };
-      }
-      return {
-        ...state,
-        timeLeft: newTimeLeft,
-      };
-
     case 'RESET_GAME':
       return initialState;
 
     default:
       return state;
   }
-}
-
-function getRandomWordsFromOtherCategories(excludeCategory: string, count: number): Word[] {
-  const otherCategories = Object.keys(WORDS_DATABASE).filter(cat => cat !== excludeCategory);
-  const randomWords: Word[] = [];
-  
-  for (let i = 0; i < count; i++) {
-    const randomCategory = otherCategories[Math.floor(Math.random() * otherCategories.length)];
-    const categoryWords = WORDS_DATABASE[randomCategory];
-    const randomWord = categoryWords[Math.floor(Math.random() * categoryWords.length)];
-    if (!randomWords.find(w => w.id === randomWord.id)) {
-      randomWords.push(randomWord);
-    }
-  }
-  
-  return randomWords;
 }
 
 const GameContext = createContext<{

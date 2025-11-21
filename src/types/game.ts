@@ -1,9 +1,9 @@
 export interface GameState {
   score: number;
   level: number;
-  correctWords: string[];
-  isGameComplete: boolean;
-  showLevelComplete: boolean;
+  currentQuestionIndex: number;
+  totalQuestions: number;
+  screen: 'start' | 'game' | 'complete';
   feedback: {
     type: 'success' | 'error' | null;
     message: string;
@@ -11,8 +11,13 @@ export interface GameState {
   };
 }
 
-export interface Word {
+export interface SafetyQuestion {
   id: string;
-  text: string;
-  isCorrect: boolean;
+  tip: string;
+  question: string;
+  choices: {
+    id: string;
+    text: string;
+    isCorrect: boolean;
+  }[];
 }

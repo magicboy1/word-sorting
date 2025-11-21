@@ -1,176 +1,161 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import Confetti from 'react-confetti';
-import { Trophy, Star, RotateCcw, Home } from 'lucide-react';
+import { Trophy, Star, RotateCcw } from 'lucide-react';
 import { useGameContext } from '../contexts/GameContext';
 
 export function GameComplete() {
   const { gameState, dispatch } = useGameContext();
 
-  const handlePlayAgain = () => {
-    dispatch({ type: 'START_GAME', payload: { mode: gameState.gameMode } });
-  };
-
-  const handleGoHome = () => {
+  const handleRestart = () => {
     dispatch({ type: 'RESET_GAME' });
   };
 
-  const getPerformanceMessage = () => {
-    if (gameState.score >= 100) return 'أداء ممتاز! 🌟';
-    if (gameState.score >= 50) return 'أداء جيد جداً! 👏';
-    if (gameState.score >= 25) return 'أداء جيد! 👍';
-    return 'يمكنك تحسين أدائك! 💪';
-  };
+  const percentage = Math.round((gameState.score / (gameState.totalQuestions * 10)) * 100);
 
-  const getStarRating = () => {
-    if (gameState.score >= 100) return 5;
-    if (gameState.score >= 75) return 4;
-    if (gameState.score >= 50) return 3;
-    if (gameState.score >= 25) return 2;
-    return 1;
-  };
+  let message = '';
+  let emoji = '';
+  if (percentage === 100) {
+    message = 'ممتاز! أنت بطل الأمان!';
+    emoji = '🏆';
+  } else if (percentage >= 80) {
+    message = 'رائع جداً! أنت تعرف الكثير عن الأمان!';
+    emoji = '⭐';
+  } else if (percentage >= 60) {
+    message = 'جيد جداً! استمر في التعلم!';
+    emoji = '👍';
+  } else {
+    message = 'حاول مرة أخرى لتحسين نتيجتك!';
+    emoji = '💪';
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8">
-      <Confetti
-        colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']}
-        numberOfPieces={200}
-        recycle={false}
-        gravity={0.3}
-      />
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 relative">
+      {percentage >= 80 && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={false}
+          numberOfPieces={500}
+        />
+      )}
 
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "backOut" }}
-        className="bg-white/10 backdrop-blur-md rounded-3xl p-12 text-center max-w-2xl w-full border border-white/20"
+        initial={{ scale: 0, rotate: -180 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        className="mb-8"
       >
-        {/* Trophy Animation */}
-        <motion.div
-          initial={{ y: -50, rotate: -180 }}
-          animate={{ y: 0, rotate: 0 }}
-          transition={{ duration: 1, ease: "backOut" }}
-          className="mb-8"
-        >
-          <Trophy className="w-24 h-24 mx-auto text-yellow-400 drop-shadow-lg" />
-        </motion.div>
-
-        {/* Title */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="text-5xl font-bold text-white mb-6"
-        >
-          تهانينا! 🎉
-        </motion.h1>
-
-        {/* Performance Message */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="text-2xl text-white/90 mb-8"
-        >
-          {getPerformanceMessage()}
-        </motion.p>
-
-        {/* Star Rating */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.5 }}
-          className="flex justify-center gap-2 mb-8"
-        >
-          {[...Array(5)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.6 + i * 0.1 }}
-            >
-              <Star
-                className={`w-12 h-12 ${
-                  i < getStarRating() 
-                    ? 'text-yellow-400 fill-yellow-400' 
-                    : 'text-gray-400'
-                }`}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Score Display */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-6 mb-8 border border-purple-500/30"
-        >
-          <div className="text-white/70 text-lg mb-2">النتيجة النهائية</div>
-          <div className="text-4xl font-bold text-white">{gameState.score}</div>
-          {gameState.streak > 0 && (
-            <div className="text-purple-300 text-lg mt-2">
-              أفضل سلسلة: {gameState.streak}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Action Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          className="flex gap-4 justify-center"
-        >
-          <motion.button
-            onClick={handlePlayAgain}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 
-                     text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+        <div className="relative">
+          <Trophy className="w-32 h-32 text-yellow-500 drop-shadow-2xl" />
+          <motion.div
+            animate={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 5, -5, 0],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute -top-4 -right-4 text-6xl"
           >
-            <RotateCcw className="w-6 h-6" />
-            العب مرة أخرى
-          </motion.button>
-
-          <motion.button
-            onClick={handleGoHome}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 
-                     text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            <Home className="w-6 h-6" />
-            الرئيسية
-          </motion.button>
-        </motion.div>
-
-        {/* Floating Elements */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
-          {[...Array(8)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-4 h-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full opacity-60"
-              animate={{
-                x: [0, 100, 0],
-                y: [0, -100, 0],
-                scale: [1, 1.5, 1],
-                opacity: [0.6, 1, 0.6],
-              }}
-              transition={{
-                duration: 4 + i,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              style={{
-                left: `${10 + i * 10}%`,
-                top: `${20 + (i % 3) * 20}%`,
-              }}
-            />
-          ))}
+            {emoji}
+          </motion.div>
         </div>
       </motion.div>
+
+      <motion.div
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-center mb-8"
+      >
+        <h1 className="text-5xl font-bold text-emerald-700 mb-4">
+          أحسنت!
+        </h1>
+        <p className="text-2xl text-gray-700 font-medium">
+          {message}
+        </p>
+      </motion.div>
+
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+        className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl mb-8 min-w-[400px]"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-2xl">
+            <span className="text-xl font-bold text-gray-700">النتيجة النهائية</span>
+            <div className="flex items-center gap-2">
+              <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+              <span className="text-3xl font-bold text-emerald-700">{gameState.score}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-100 to-emerald-100 rounded-2xl">
+            <span className="text-xl font-bold text-gray-700">الأسئلة الصحيحة</span>
+            <span className="text-3xl font-bold text-emerald-700">
+              {gameState.score / 10} / {gameState.totalQuestions}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-100 to-blue-100 rounded-2xl">
+            <span className="text-xl font-bold text-gray-700">النسبة المئوية</span>
+            <span className="text-3xl font-bold text-emerald-700">{percentage}%</span>
+          </div>
+        </div>
+      </motion.div>
+
+      <motion.button
+        initial={{ y: 50, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.7 }}
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleRestart}
+        className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-12 py-5 rounded-2xl
+                   font-bold text-2xl shadow-2xl hover:shadow-3xl transition-all duration-300
+                   border-4 border-white flex items-center gap-4"
+      >
+        <RotateCcw className="w-8 h-8" />
+        <span>العب مرة أخرى</span>
+      </motion.button>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="mt-12 text-center max-w-2xl"
+      >
+        <p className="text-lg text-gray-700 leading-relaxed">
+          تذكر دائماً: أمانك على الإنترنت مسؤوليتك! استخدم ما تعلمته اليوم للحفاظ على خصوصيتك وأمانك الرقمي.
+        </p>
+      </motion.div>
+
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-4 h-4 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full opacity-20"
+            animate={{
+              x: [0, 100, 0],
+              y: [0, -100, 0],
+              scale: [1, 2, 1],
+            }}
+            transition={{
+              duration: 6 + i * 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            style={{
+              left: `${5 + i * 8}%`,
+              top: `${10 + i * 7}%`,
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,30 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Zap, Clock, Infinity, Globe, Leaf, UtensilsCrossed, Car } from 'lucide-react';
+import { Shield, Play } from 'lucide-react';
 import { useGameContext } from '../contexts/GameContext';
 
-const CATEGORIES = [
-  { id: 'internet', name: 'الإنترنت والتكنولوجيا', icon: Globe, color: 'from-blue-500 to-cyan-500' },
-  { id: 'nature', name: 'الطبيعة والبيئة', icon: Leaf, color: 'from-green-500 to-emerald-500' },
-  { id: 'food', name: 'الطعام والتغذية', icon: UtensilsCrossed, color: 'from-orange-500 to-red-500' },
-  { id: 'transport', name: 'النقل والمواصلات', icon: Car, color: 'from-purple-500 to-pink-500' },
-] as const;
-
-const GAME_MODES = [
-  { id: 'classic', name: 'كلاسيكي', description: 'العب بدون ضغط الوقت', icon: Play, color: 'from-indigo-500 to-purple-500' },
-  { id: 'timed', name: 'مؤقت', description: '60 ثانية للفوز', icon: Clock, color: 'from-red-500 to-pink-500' },
-  { id: 'endless', name: 'لا نهائي', description: 'استمر قدر ما تستطيع', icon: Infinity, color: 'from-green-500 to-teal-500' },
-] as const;
-
 export function StartScreen() {
-  const { gameState, dispatch } = useGameContext();
+  const { dispatch } = useGameContext();
 
-  const handleStartGame = (mode: 'classic' | 'timed' | 'endless') => {
-    dispatch({ type: 'START_GAME', payload: { mode } });
-  };
-
-  const handleCategorySelect = (category: 'internet' | 'nature' | 'food' | 'transport') => {
-    dispatch({ type: 'SELECT_CATEGORY', payload: category });
+  const handleStartGame = () => {
+    dispatch({ type: 'START_GAME' });
   };
 
   return (
@@ -36,123 +19,82 @@ export function StartScreen() {
         className="text-center mb-12"
       >
         <motion.div
-          animate={{ 
-            scale: [1, 1.05, 1],
-            rotate: [0, -2, 2, 0]
+          animate={{
+            scale: [1, 1.1, 1],
+            rotate: [0, -5, 5, 0]
           }}
-          transition={{ 
-            duration: 4,
+          transition={{
+            duration: 3,
             repeat: Infinity,
             ease: "easeInOut"
           }}
           className="mb-6"
         >
-          <Zap className="w-20 h-20 mx-auto text-yellow-400 drop-shadow-lg" />
+          <Shield className="w-24 h-24 mx-auto text-emerald-600 drop-shadow-lg" />
         </motion.div>
-        
-        <h1 className="text-6xl font-bold bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 bg-clip-text text-transparent mb-4">
-          لعبة الكلمات الذكية
+
+        <h1 className="text-6xl font-bold bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 bg-clip-text text-transparent mb-4">
+          في أمان السوشيال ميديا
         </h1>
-        <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-          اختبر معرفتك وسرعة بديهتك في تصنيف الكلمات. اختر الفئة المناسبة واستمتع بتجربة لعب مثيرة!
+        <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
+          تعلم كيف تحافظ على أمانك وخصوصيتك على الإنترنت من خلال لعبة تعليمية ممتعة!
         </p>
       </motion.div>
 
-      {/* Category Selection */}
+      <motion.button
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+        whileHover={{ scale: 1.05, y: -5 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={handleStartGame}
+        className="relative px-12 py-6 rounded-3xl bg-gradient-to-r from-emerald-500 to-teal-500
+                   shadow-2xl hover:shadow-3xl transition-all duration-300
+                   border-4 border-white"
+      >
+        <div className="flex items-center gap-4">
+          <Play className="w-10 h-10 text-white fill-white" />
+          <span className="text-white font-bold text-3xl">ابدأ اللعب</span>
+        </div>
+
+        <motion.div
+          className="absolute inset-0 rounded-3xl bg-white/20"
+          initial={{ opacity: 0 }}
+          whileHover={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        />
+      </motion.button>
+
       <motion.div
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="mb-12"
+        transition={{ duration: 0.8, delay: 0.7 }}
+        className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl"
       >
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">اختر الفئة</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {CATEGORIES.map((category, index) => {
-            const Icon = category.icon;
-            const isSelected = gameState.selectedCategory === category.id;
-            
-            return (
-              <motion.button
-                key={category.id}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                whileHover={{ scale: 1.05, y: -5 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleCategorySelect(category.id as any)}
-                className={`relative p-6 rounded-2xl bg-gradient-to-br ${category.color} 
-                           shadow-lg hover:shadow-xl transition-all duration-300
-                           ${isSelected ? 'ring-4 ring-white ring-opacity-50' : ''}`}
-              >
-                <div className="text-center">
-                  <Icon className="w-12 h-12 mx-auto mb-3 text-white drop-shadow-lg" />
-                  <h3 className="text-white font-bold text-lg mb-1">{category.name}</h3>
-                </div>
-                
-                {isSelected && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-white rounded-full flex items-center justify-center"
-                  >
-                    <div className="w-3 h-3 bg-green-500 rounded-full" />
-                  </motion.div>
-                )}
-              </motion.button>
-            );
-          })}
-        </div>
+        {[
+          { icon: '🔒', text: 'الخصوصية' },
+          { icon: '🛡️', text: 'الأمان' },
+          { icon: '🤝', text: 'الاحترام' },
+          { icon: '💡', text: 'الوعي' },
+        ].map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.9 + index * 0.1 }}
+            className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 text-center shadow-lg"
+          >
+            <div className="text-4xl mb-2">{item.icon}</div>
+            <div className="text-gray-700 font-bold">{item.text}</div>
+          </motion.div>
+        ))}
       </motion.div>
 
-      {/* Game Mode Selection */}
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-        className="w-full max-w-4xl"
-      >
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">اختر نمط اللعب</h2>
-        <div className="grid md:grid-cols-3 gap-6">
-          {GAME_MODES.map((mode, index) => {
-            const Icon = mode.icon;
-            
-            return (
-              <motion.button
-                key={mode.id}
-                initial={{ y: 50, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.5 + index * 0.1 }}
-                whileHover={{ scale: 1.02, y: -5 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleStartGame(mode.id as any)}
-                className={`relative p-8 rounded-3xl bg-gradient-to-br ${mode.color} 
-                           shadow-xl hover:shadow-2xl transition-all duration-300
-                           border border-white/20 backdrop-blur-sm`}
-              >
-                <div className="text-center">
-                  <Icon className="w-16 h-16 mx-auto mb-4 text-white drop-shadow-lg" />
-                  <h3 className="text-white font-bold text-2xl mb-2">{mode.name}</h3>
-                  <p className="text-white/90 text-lg">{mode.description}</p>
-                </div>
-                
-                <motion.div
-                  className="absolute inset-0 rounded-3xl bg-white/10"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              </motion.button>
-            );
-          })}
-        </div>
-      </motion.div>
-
-      {/* Floating Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-4 h-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full opacity-20"
+            className="absolute w-3 h-3 bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full opacity-30"
             animate={{
               x: [0, 100, 0],
               y: [0, -100, 0],
@@ -164,8 +106,8 @@ export function StartScreen() {
               ease: "easeInOut",
             }}
             style={{
-              left: `${10 + i * 15}%`,
-              top: `${20 + i * 10}%`,
+              left: `${5 + i * 12}%`,
+              top: `${10 + i * 10}%`,
             }}
           />
         ))}
