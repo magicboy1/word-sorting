@@ -1,91 +1,176 @@
 import React, { useEffect } from 'react';
-import Confetti from 'react-confetti';
 import { motion } from 'framer-motion';
-import { useGameSounds } from '../hooks/useGameSounds';
-import { Trophy, Star, Sparkles } from 'lucide-react';
+import Confetti from 'react-confetti';
+import { Trophy, Star, RotateCcw, Home } from 'lucide-react';
+import { useGameContext } from '../contexts/GameContext';
 
-interface GameCompleteProps {
-  score: number;
-}
+export function GameComplete() {
+  const { gameState, dispatch } = useGameContext();
 
-export function GameComplete({ score }: GameCompleteProps) {
-  const { playSound } = useGameSounds();
+  const handlePlayAgain = () => {
+    dispatch({ type: 'START_GAME', payload: { mode: gameState.gameMode } });
+  };
 
-  useEffect(() => {
-    playSound('gameComplete');
-  }, [playSound]);
+  const handleGoHome = () => {
+    dispatch({ type: 'RESET_GAME' });
+  };
+
+  const getPerformanceMessage = () => {
+    if (gameState.score >= 100) return 'أداء ممتاز! 🌟';
+    if (gameState.score >= 50) return 'أداء جيد جداً! 👏';
+    if (gameState.score >= 25) return 'أداء جيد! 👍';
+    return 'يمكنك تحسين أدائك! 💪';
+  };
+
+  const getStarRating = () => {
+    if (gameState.score >= 100) return 5;
+    if (gameState.score >= 75) return 4;
+    if (gameState.score >= 50) return 3;
+    if (gameState.score >= 25) return 2;
+    return 1;
+  };
 
   return (
-    <motion.div
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      className="fixed inset-0 flex items-center justify-center bg-accent/50 backdrop-blur-sm z-50"
-    >
+    <div className="min-h-screen flex items-center justify-center p-8">
       <Confetti
-        colors={['#56A57D', '#E17A63', '#526B96', '#4A2B2B']}
-        numberOfPieces={500}
-        recycle={true}
-        gravity={0.2}
+        colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']}
+        numberOfPieces={200}
+        recycle={false}
+        gravity={0.3}
       />
-      
-      <div className="bg-white rounded-3xl p-12 text-center font-arabic border-8 border-primary shadow-2xl max-w-2xl w-full mx-4">
+
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.6, ease: "backOut" }}
+        className="bg-white/10 backdrop-blur-md rounded-3xl p-12 text-center max-w-2xl w-full border border-white/20"
+      >
+        {/* Trophy Animation */}
         <motion.div
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="flex justify-center items-center gap-4 mb-8"
+          initial={{ y: -50, rotate: -180 }}
+          animate={{ y: 0, rotate: 0 }}
+          transition={{ duration: 1, ease: "backOut" }}
+          className="mb-8"
         >
-          <Sparkles className="w-12 h-12 text-secondary" />
-          <Trophy className="w-16 h-16 text-primary" />
-          <Sparkles className="w-12 h-12 text-secondary" />
+          <Trophy className="w-24 h-24 mx-auto text-yellow-400 drop-shadow-lg" />
         </motion.div>
 
-        <motion.h2 
-          className="text-5xl font-bold mb-8 text-primary"
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2 }}
+        {/* Title */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="text-5xl font-bold text-white mb-6"
         >
-          مبروك! لقد أكملت اللعبة
-        </motion.h2>
+          تهانينا! 🎉
+        </motion.h1>
 
-        <motion.div
-          className="flex justify-center gap-2 mb-8"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+        {/* Performance Message */}
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
+          className="text-2xl text-white/90 mb-8"
+        >
+          {getPerformanceMessage()}
+        </motion.p>
+
+        {/* Star Rating */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.5 }}
+          className="flex justify-center gap-2 mb-8"
         >
           {[...Array(5)].map((_, i) => (
-            <Star
+            <motion.div
               key={i}
-              className="w-12 h-12 text-secondary"
-              fill="currentColor"
-            />
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.6 + i * 0.1 }}
+            >
+              <Star
+                className={`w-12 h-12 ${
+                  i < getStarRating() 
+                    ? 'text-yellow-400 fill-yellow-400' 
+                    : 'text-gray-400'
+                }`}
+              />
+            </motion.div>
           ))}
         </motion.div>
 
-        <motion.p 
-          className="text-4xl mb-10 text-accent"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          النتيجة النهائية: <span className="font-bold text-primary">{score}</span>
-        </motion.p>
-
-        <motion.button
-          onClick={() => window.location.reload()}
-          className="bg-primary text-white px-10 py-5 rounded-xl text-2xl
-                   transition-all transform hover:-translate-y-1 hover:shadow-lg
-                   hover:bg-primary/90 flex items-center gap-3 mx-auto"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
+        {/* Score Display */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8 }}
+          className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl p-6 mb-8 border border-purple-500/30"
         >
-          العب مرة أخرى
-        </motion.button>
-      </div>
-    </motion.div>
+          <div className="text-white/70 text-lg mb-2">النتيجة النهائية</div>
+          <div className="text-4xl font-bold text-white">{gameState.score}</div>
+          {gameState.streak > 0 && (
+            <div className="text-purple-300 text-lg mt-2">
+              أفضل سلسلة: {gameState.streak}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Action Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="flex gap-4 justify-center"
+        >
+          <motion.button
+            onClick={handlePlayAgain}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 
+                     text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <RotateCcw className="w-6 h-6" />
+            العب مرة أخرى
+          </motion.button>
+
+          <motion.button
+            onClick={handleGoHome}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gray-600 to-gray-700 
+                     text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            <Home className="w-6 h-6" />
+            الرئيسية
+          </motion.button>
+        </motion.div>
+
+        {/* Floating Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+          {[...Array(8)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-4 h-4 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full opacity-60"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -100, 0],
+                scale: [1, 1.5, 1],
+                opacity: [0.6, 1, 0.6],
+              }}
+              transition={{
+                duration: 4 + i,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              style={{
+                left: `${10 + i * 10}%`,
+                top: `${20 + (i % 3) * 20}%`,
+              }}
+            />
+          ))}
+        </div>
+      </motion.div>
+    </div>
   );
 }
